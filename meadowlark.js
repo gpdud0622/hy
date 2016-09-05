@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var fortune = require('./lib/fortune.js');
 //핸들바 뷰 엔진 설정
 var handlebars = require('express-handlebars')
 	.create({ defaultLayout:'main' });
@@ -8,6 +9,13 @@ app
 .set('view engine', 'handlebars')
 .set('port', process.env.PORT || 3000)
 .use(express.static(__dirname + '/public'));
+
+//테스트 기능 on/off
+app.use(function(req, res, next){
+	res.locals.showTests = app.get('env') !== 'production' && 
+		req.query.test === '1';
+	next();
+});
 
 var fortuneCookies = [
 	"Conquer your fears or they will conquer you.",
@@ -22,11 +30,10 @@ app
 	res.render('home');
 })
 
-.get('/about', function(req,res){
-	var randomFortune = 
-		fortuneCookies[Math.floor(Math.random() * fortuneCookies.length)];
-	res.render('about', { fortune: randomFortune });
+app.get('/about', function(req,res){
+	res.render('about', { fortune: fortune.getFortune() } );
 });
+
 // 404 catch-all handler (middleware)
 app.use(function(req, res){
 	res.type('text/plain');
